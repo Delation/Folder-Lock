@@ -1,96 +1,97 @@
-import tkinter as Tk # Import our graphics module
-from datetime import datetime # Lets us get current time and date
-import sys # Get the system operating system
-from threading import Thread # Get access to threading
-from time import sleep # Useful for delaying time
-import os # Gives us access to the CONSOLE
-from zipfile import ZipFile # Unzip and zip files!
-from enum import Enum # To make Enums in Python!
-import urllib.parse # An amazing way to make URL-Safe strings!
-from utility import File, Timer # My utilities I wrote on vacation!
+from time import sleep
+import os
+import sys
+from threading import Thread
 
-# --------
-# Please enjoy using this code for your every purpose!
-# It's completely free to fork it and make your own branch, so have fun!
-# Best regards, Deltaion Lee
-# --------
-
-version = 0.1
-
-root_path = os.path.abspath(os.sep)
-
-project_root = os.path.dirname(os.path.abspath(__file__))
-
-def kill(str:str = 'An internal process killed the running processes'):
-    sys.exit(str)
-
-def restart():
-    os.execl(sys.executable, sys.executable, *sys.argv)
-
-def checkdir(path):
-    if not os.path.isdir(path):
-        os.mkdir(path)
-
-def open_folder(str = "."):
-    if OS == t_OS.mac:
-        str = f"open {str}"
-    elif OS == t_OS.windows:
-        str = f"start {str}"
-    else:
-        return
-    os.system(str)
-
-t_OS = Enum('Operating System', 'windows mac ?')
-
-OS = t_OS['?']
-window_closed = True
-processing = False
-username = "Superuser"
-
+archive_path = './STORAGE'
 separator = "||__||"
 
-if sys.platform.startswith("darwin"):
-    OS = t_OS.mac
-    app_path = project_root
-    username = os.getlogin()
-elif sys.platform.startswith("win"):
-    OS = t_OS.windows
-    app_path = project_root
-    username = os.getlogin()
-else:
-    app_path = project_root
-archive_path = f"{project_root}/STORAGE"
+class File():
 
-checkdir(f"ARCHIVE/")
-checkdir(f"STORAGE/")
+    default = "Write not specified"
 
-window = Tk.Tk()
-window.title(f"Folder-Lock v{version}")
-window.geometry("500x400+300+300")
-window.resizable(False,False)
+    def __init__(self,file = f"{__name__}.py"):
+        self.file = file
 
-frame = Tk.Frame(window, width=800, height=400)
-frame.pack()
+    def read(self):
+        with open(self.file,"r") as file:
+            return file.read()
 
-author = Tk.Label(frame,text="By Deltaion Lee!")
-author.config(font=("Helvetica",12))
-author.place(x=190,y=5,width=120,height=20)
-author.bind("<Button-1>", lambda e: open_folder("https://github.com/MCMi460"))
+    def read_bytes(self):
+        with open(self.file,"rb") as file:
+            return file.read()
 
-user = Tk.Label(frame,text=username,anchor='w')
-user.config(font=("Helvetica",12))
-user.place(x=0,y=5,width=120,height=20)
-user.bind("<Button-1>", lambda e: open_folder(f"https://ghostr.mi460.dev/user/search?user={urllib.parse.quote(username)}"))
+    def write_bytes(self,content):
+        with open(self.file,"wb") as file:
+            file.write(content)
 
-timestamp = Tk.Label(frame,text=f"{datetime.now().strftime('%Y/%m/%d %H:%M:%S')}",font=("Helvetica",12))
-timestamp.place(x=350,y=5,width=150,height=20)
+    def append_bytes(self,content):
+        with open(self.file,"ab") as file:
+            file.write(content)
 
-def time_loop():
-    while True:
-        timestamp.config(text=f"{datetime.now().strftime('%Y/%m/%d %H:%M:%S')}")
-        sleep(1)
+    def overwrite(self,content = default):
+        with open(self.file,"w") as file:
+            file.write(content)
 
-Thread(target=time_loop,args=(),daemon=True).start()
+    def write(self,content = default):
+        self.overwrite(content)
+
+    def append(self,content = default):
+        with open(self.file,"a") as file:
+            file.write(content)
+
+    def char_count(self):
+        return len(self.read())
+
+    def word_count(self):
+        return len(self.read().split())
+
+    def readlines(self):
+        return self.read().split("\n")
+
+    def readline(self,n:int):
+        i = 0
+        for line in self.readlines():
+            i += 1
+            if i == n:
+                return line
+        return None
+
+    def find(self,search:str="None",case_sensitive:bool=False,whole_line:bool=False):
+        list = []
+        n = 0
+        failed = True
+        if not case_sensitive:
+            _search = search.lower()
+        else:
+            _search = search
+        for line in self.readlines():
+            c = 0
+            n += 1
+            i = 0
+            if not case_sensitive:
+                _line = line.lower()
+            else:
+                _line = line
+            if _search in _line:
+                if whole_line:
+                    list.append(line)
+                else:
+                    for char in _line:
+                        c += 1
+                        if not failed and i == len(search):
+                            list.append(f"Line {n}, column {c - i}")
+                            i = 0
+                            failed = True
+                        else:
+                            if char[0] == _search[i]:
+                                failed = False
+                                i += 1
+                            else:
+                                i = 0
+                                failed = True
+
+        return list
 
 def encrypt(key, bytes_list):
     encoded_items = []
@@ -120,12 +121,8 @@ def unlock(key:str):
     global processing
     processing = True
     print("Encoding passkey...")
-    notice.config(text="Encoding passkey...")
-    key = urllib.parse.quote(key)
-    print(f"\nLock (key:str): [\nRegister password using `{key}`\n(Decoded as {urllib.parse.unquote(key)})\n]\n")
     sleep(0.1)
     print("Getting file data...")
-    notice.config(text="Getting file data...")
     files = [f for f in os.listdir(archive_path) if os.path.isfile(os.path.join(archive_path, f))]
     sleep(0.1)
     try: files.remove('.DS_Store')
@@ -136,7 +133,6 @@ def unlock(key:str):
     for item in files:
         count += 1
         print(f"Rewriting files... {count}/{files_n}")
-        notice.config(text=f"Rewriting files...{count}/{files_n}")
 
         file = File(f"{archive_path}/{item}")
 
@@ -152,61 +148,21 @@ def unlock(key:str):
             file.write_bytes(b''.join(decrypted))
         except:
             print(f"Error on file {count}/{files_n}\nFile name: {item}")
-            notice.config(text=f"Error on file {count}/{files_n}")
             sleep(1)
-            print(f"Proceeding with restoring backup...")
-            notice.config(text=f"Proceeding with restoring backup...")
-            archives = [f for f in os.listdir(f"{archive_path.replace('/STORAGE','')}/ARCHIVE") if os.path.isfile(os.path.join(f"{archive_path.replace('/STORAGE','')}/ARCHIVE", f))]
-            try:
-                archives.remove('.folder-lock')
-                archives.remove('.DS_Store')
-            except: pass
-            date_time_obj = datetime.strptime("1970-01-01|00-00", '%Y-%m-%d|%H-%M')
-            zip = None
-            for archive in archives:
-                try:
-                    if datetime.strptime(archive.replace(".zip",""), '%Y-%m-%d|%H-%M') > date_time_obj:
-                        date_time_obj = datetime.strptime(archive.replace(".zip",""), '%Y-%m-%d|%H-%M')
-                        zip = archive
-                    print(f"{archive}...")
-                except:
-                    pass
-            sleep(0.2)
-            print(f"Found archive {zip}...")
-            notice.config(text=f"Found archive {zip}...")
-            sleep(0.1)
-            try:
-                with ZipFile(f"ARCHIVE/{zip}", 'r') as zip_ref:
-                    zip_ref.extractall(f"{archive_path}")
-                print(f"Extracted {zip} successfully!")
-                notice.config(text=f"Extracted {zip} successfully!")
-                print(f"Warning, the extracted file may not be exactly perfect. Please check the directory before use.")
-            except:
-                print(f"Could not extract {zip}.")
-                notice.config(text=f"Could not extract {zip}.")
             sleep(0.1)
             processing = False
             return
 
         sleep(0.1)
     print(f"Successfully decrypted files!")
-    notice.config(text=f"Successfully decrypted files!")
     processing = False
-
-def call_unlock():
-    if not processing:
-        Thread(target=unlock,args=(password_field.get("1.0",'end-1c'),),daemon=False).start()
 
 def lock(key:str):
     global processing
     processing = True
     print("Encoding passkey...")
-    notice.config(text="Encoding passkey...")
-    key = urllib.parse.quote(key)
-    print(f"\nLock (key:str): [\nRegister password using `{key}`\n(Decoded as {urllib.parse.unquote(key)})\n]\n")
     sleep(0.1)
     print("Getting file data...")
-    notice.config(text="Getting file data...")
     files = [f for f in os.listdir(archive_path) if os.path.isfile(os.path.join(archive_path, f))]
     sleep(0.1)
     try: files.remove('.DS_Store')
@@ -218,61 +174,36 @@ def lock(key:str):
     for file in files:
         count += 1
         print(f"Rewriting files... {count}/{files_n}")
-        notice.config(text=f"Rewriting files...{count}/{files_n}")
+        print(file)
 
-        file = File(f"{archive_path}/{file}")
+        file_obj = File(f"{archive_path}/{file}")
 
-        data_buffer = file.read_bytes()
+        data_buffer = file_obj.read_bytes()
         try:
-            if "_*" in file.read():
+            if "_*" in file_obj.read():
                 continue
         except:
             pass
 
         try:
             encrypted = encrypt(key, data_buffer)
-            file.overwrite("_*" + ''.join(encrypted))
+            file_obj.overwrite("_*" + ''.join(encrypted))
             locked = False
-        except:
+        except Exception as e:
             print(f"Error on file {count}/{files_n}\nFile: {file}")
-            notice.config(text=f"Error on file {count}/{files_n}")
+            print(e)
             sleep(1)
             processing = False
             return
 
         sleep(0.1)
-    if not locked:
-        print(f"Archiving files...")
-        notice.config(text=f"Archiving files...")
-        filename = f"ARCHIVE/{datetime.now().strftime('%Y-%m-%d|%H-%M')}.zip"
-        zipObj = ZipFile(filename, 'w')
-        for file in files:
-            zipObj.write(f"{archive_path}/{file}")
-        zipObj.close()
-        sleep(0.1)
     print(f"Successfully encrypted files!")
-    notice.config(text=f"Successfully encrypted files!")
     processing = False
-
-def call_lock():
-    if not processing:
-        Thread(target=lock,args=(password_field.get("1.0",'end-1c'),),daemon=False).start()
-
-password_field = Tk.Text(frame,height=1,width=30)
-password_field.insert("1.0", "Password")
-password_field.place(x=145,y=50)
-
-lock_button = Tk.Button(frame,text="Lock",font=("Helvetica",16),command=call_lock)
-lock_button.place(x=175,y=100,width=150,height=20)
-
-unlock_button = Tk.Button(frame,text="Unlock",font=("Helvetica",16),command=call_unlock)
-unlock_button.place(x=175,y=150,width=150,height=20)
-
-notice = Tk.Label(frame,text="All data to be stored must be in a folder named \"STORAGE\"")
-notice.config(font=("Helvetica",14))
-notice.place(x=0,y=350,width=500,height=30)
-notice.bind("<Button-1>", lambda e: open_folder("STORAGE"))
-
-window_closed = False
-window.mainloop()
-window_closed = True
+    
+processing = False
+passkey = input("Input password: ")
+choice = input("Lock/Unlock: ").lower()
+if choice.startswith("lock"):
+	lock(passkey)
+else:
+	unlock(passkey)
