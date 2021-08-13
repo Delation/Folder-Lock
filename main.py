@@ -1,7 +1,6 @@
 from time import sleep
 import os
 import sys
-from threading import Thread
 
 archive_path = './STORAGE'
 separator = "||__||"
