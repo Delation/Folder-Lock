@@ -5,6 +5,9 @@ import sys
 archive_path = './STORAGE'
 separator = "||__||"
 
+# The below code is by Deltaion Lee (MCMi460 on Github)
+# I did not edit it in the slightest.
+# Thank you.
 class File():
 
     default = "Write not specified"
@@ -91,6 +94,7 @@ class File():
                                 failed = True
 
         return list
+# This marks the end of Deltaion's 'copyrighted' code.
 
 def encrypt(key, bytes_list):
     encoded_items = []
@@ -117,8 +121,6 @@ def decrypt(key, bytes_list):
     return encoded_items
 
 def unlock(key:str):
-    global processing
-    processing = True
     print("Encoding passkey...")
     sleep(0.1)
     print("Getting file data...")
@@ -149,16 +151,12 @@ def unlock(key:str):
             print(f"Error on file {count}/{files_n}\nFile name: {item}")
             sleep(1)
             sleep(0.1)
-            processing = False
             return
 
         sleep(0.1)
     print(f"Successfully decrypted files!")
-    processing = False
 
 def lock(key:str):
-    global processing
-    processing = True
     print("Encoding passkey...")
     sleep(0.1)
     print("Getting file data...")
@@ -192,14 +190,11 @@ def lock(key:str):
             print(f"Error on file {count}/{files_n}\nFile: {file}")
             print(e)
             sleep(1)
-            processing = False
             return
 
         sleep(0.1)
     print(f"Successfully encrypted files!")
-    processing = False
     
-processing = False
 passkey = input("Input password: ")
 choice = input("Lock/Unlock: ").lower()
 if choice.startswith("lock"):
